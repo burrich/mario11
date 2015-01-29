@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="212" height="14" tilewidth="16" tileheight="16" nextobjectid="1">
+ <tileset firstgid="1" name="Tileset" tilewidth="16" tileheight="16">
+  <image source="Tileset.png" width="528" height="448"/>
+ </tileset>
+ <imagelayer name="Calque d'image" y="8" visible="0">
+  <image source="World 1-1.png"/>
+ </imagelayer>
+ <layer name="Background" width="212" height="14">
+  <data encoding="base64" compression="zlib">
+   eJzt0zEKg0AURdHRHag7SVBXGrOTmOX5QQZsNJoUEjkHXjVT/OamBADX9ihTGmLP8uxL4P+9oqMx9l7pKfc26A5+lnsbP3QHAAAAABxTF2dfANdQRUu3WPNlU1qEWW7pvqOpNt66xfpiu8V28Q8AjpgA8UcN2Q==
+  </data>
+ </layer>
+ <layer name="Collision" width="212" height="14">
+  <properties>
+   <property name="collidable" value="true"/>
+  </properties>
+  <data encoding="base64" compression="zlib">
+   eJzt1zEKgDAMBdDETW/gFez976eDg+haaA3vwafQKXzIkAgAAACAGvbRAwAAAEzmfSct99/zBYDZrRmx5egpoIbj2qVmnygq5ZMe3ei4b59/yQlpcAGk
+  </data>
+ </layer>
+</map>
