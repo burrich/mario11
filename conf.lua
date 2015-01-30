@@ -1,8 +1,8 @@
 scale = 2
-debug = false
+debug = true
 
 function love.conf(t)
-	t.title = "Platelover"
+	t.title = "mario11"
 	t.window.width = 256*scale
 	t.window.height = 224*scale
 	

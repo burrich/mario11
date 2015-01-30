@@ -1,15 +1,15 @@
 camera = {}
 camera._x = 0
 camera._y = 0
-camera.scaleX = 1
-camera.scaleY = 1
+camera.scaleX = 1 / scale
+camera.scaleY = 1 / scale
 camera.rotation = 0
 
 function camera:set()
 	love.graphics.push()
 	love.graphics.rotate(-self.rotation)
-	love.graphics.scale(1 / self.scaleX, 1 / self.scaleY)
 	love.graphics.translate(-self._x, -self._y)
+	love.graphics.scale(1 / self.scaleX, 1 / self.scaleY) -- Scale update must be done after translation
 end
 
 function camera:unset()

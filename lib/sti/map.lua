@@ -284,19 +284,21 @@ function Map:initWorldCollision(world)
 	end
 
 	for _, layer in ipairs(self.layers) do
-		if layer.properties.collidable == "true" and self.tileInstances[gid]~=nil then -- FIX !!! (and self.tileInstances[gid]~=nil)
+		if layer.properties.collidable == "true" then 
 			-- Entire layer
 			if layer.type == "tilelayer" then
 				for y, tiles in ipairs(layer.data) do
 					for x, tile in pairs(tiles) do
-						local object = {
-							shape	= "rectangle",
-							x		= x * tile.width + tile.offset.x,
-							y		= y * tile.height + tile.offset.y,
-							width	= tile.width,
-							height	= tile.height,
-						}
-						calculateObjectPosition(object)
+						if tile ~= false then -- My fix for initWorldCollision()
+							local object = {
+								shape	= "rectangle",
+								x		= x * tile.width + tile.offset.x,
+								y		= y * tile.height + tile.offset.y,
+								width	= tile.width,
+								height	= tile.height,
+							}
+							calculateObjectPosition(object)
+						end
 					end
 				end
 			elseif layer.type == "objectgroup" then
