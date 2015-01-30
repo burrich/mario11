@@ -3,23 +3,25 @@ local sti = require "lib/sti"
 require "camera"
 
 function love.load()
-	-- Window size
-	windowWidth  = love.graphics.getWidth()
-	windowHeight = love.graphics.getHeight()
-
-	-- Set camera bounds
-	camera:setBounds(0, 0, windowWidth, windowHeight)
+	-- Window original size 
+	-- Multiply by scale to get the real window size
+	windowWidth  = love.graphics.getWidth()/scale
+	windowHeight = love.graphics.getHeight()/scale
 
 	-- Load lua map from Tiled
 	map = sti.new("map/world11")
 	tileSize = map.tilewidth
-	mapPixelWidth = map.width*tileSize
+	mapPixelWidth = map.width*tileSize*scale
+	mapPixelHeight = map.height*tileSize*scale
+
+	-- Set camera bounds
+	camera:setBounds(0, 0, mapPixelWidth - windowWidth*scale, mapPixelHeight - windowHeight*scale)
 
 	-- World
 	physicsWorld = love.physics.newWorld()
 	world = {
 		gravity = 41.32,
-		ground  = windowHeight - tileSize*scale
+		ground  = windowHeight - tileSize
 	}
 
 	-- Collision objects
@@ -29,7 +31,7 @@ function love.load()
 	player = {}
 		player.width        = tileSize
 		player.height       = tileSize
-		player.xOrigine     = windowWidth/2-- - player.width/2
+		player.xOrigine     = windowWidth/2 -- - player.width/2
 		player.x            = player.xOrigine
 		player.y            = world.ground - tileSize
 		player.velocityX    = 0
@@ -164,7 +166,7 @@ function love.update(dt)
 	map:update(dt)
 	player:update(dt)
 
-	camera:setPosition(player.x - windowWidth / 2, 0)
+	camera:setPosition((player.x - windowWidth/2) * scale, 0)
 end
 
 function love.draw()
@@ -174,10 +176,10 @@ function love.draw()
 	love.graphics.setBackgroundColor(107, 140, 255)
 
 	-- Draw Range culls unnecessary tiles
-	-- map:setDrawRange(-translateX, translateY, windowWidth, windowHeight)
+	map:setDrawRange(-camera._x/scale, 0, windowWidth, windowHeight)
 
 	-- Draw objects
-	map:draw(scale) -- scale
+	map:draw()
 	player:draw()
 
 	if debug then
