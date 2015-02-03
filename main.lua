@@ -82,15 +82,16 @@ function love.draw()
 		end
 
 		-- Display FPS and player information
-		love.graphics.print("fps : " .. love.timer.getFPS(), 5, 0)
-		love.graphics.print("x : " .. string.format("%.1f", player.x), 5, 15)
-		love.graphics.print("y : " .. string.format("%.1f", player.y), 5, 30)
-		love.graphics.print("velocity x : " .. string.format("%.1f", player.velocityX), 5, 45)
-		love.graphics.print("velocity y : " .. string.format("%.1f", player.velocityY), 5, 60)
-		love.graphics.print("tile x : " ..  math.floor(player.x / tileSize) +1, 5, 75)
-		love.graphics.print("tile y : " .. math.floor(player.y / tileSize) +1,5, 90)
-		love.graphics.print("state x : " .. player.stateX,5, 105)
-		love.graphics.print("state y : " .. player.stateY,5, 120)
+		love.graphics.print("fps : " .. love.timer.getFPS(), 2, 0, 0, 1/scale, 1/scale)
+		love.graphics.print("x : " .. string.format("%.1f", player.x), 2, 15/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("y : " .. string.format("%.1f", player.y), 2, 30/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("velocity x : " .. string.format("%.1f", player.velocityX), 2, 45/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("velocity y : " .. string.format("%.1f", player.velocityY), 2, 60/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("tile x : " ..  math.floor(player.x / tileSize) +1, 2, 75/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("tile y : " .. math.floor(player.y / tileSize) +1, 2, 90/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("state x : " .. player.stateX, 2, 105/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("state y : " .. player.stateY, 2, 120/scale, 0, 1/scale, 1/scale)
+		love.graphics.print("life : " .. player.life, 2, 135/scale, 0, 1/scale, 1/scale)
 	end
 
 	camera:unset()
@@ -110,9 +111,12 @@ function love.keypressed(key)
 end
 
 function love.keyreleased(key)
-	if key == "q" or key == "left" 
-	or key == "d" or key == "right" then
-		player:stop()
+	if key == "q" or key == "left" then
+		player.velocityX = 0
+		player.stateX = "standingLeft"
+	elseif key == "d" or key == "right" then
+		player.velocityX = 0
+		player.stateX = "standingRight"
 	end
 end
 
