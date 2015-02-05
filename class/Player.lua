@@ -19,20 +19,19 @@ local leftWalkAnim = rightWalkAnim:clone():flipH()
 Player = {}
 Player.__index = Player
 
-function Player:new()
+function Player:new(x, y)
 	local object = {
-		width        = tileSize,
-		height       = tileSize,
-		x            = windowWidth/2,
-		y            = world.ground - tileSize,
+		width        = standImg:getWidth(),
+		height       = standImg:getHeight(),
+		x            = x,
+		y            = y,
 		velocityX    = 0,
 		velocityY    = 0,
-		jumpHeight   = 5*tileSize,
+		jumpHeight   = 5 * standImg:getHeight(),
 		speed        = 150,
 		ySpeed       = 3,
 		fallingSpeed = 3,
 		life         = 1,
-		score        = 0,
 		stateX       = "standingRight",
 		stateY       = "standing",
 		anim         = nil
@@ -76,7 +75,7 @@ function Player:dead()
 	self.stateY = "dead"
 end
 
-function Player:isColliding(x, y)
+function Player:isColliding(x, y, map)
 	local tileX = math.floor(x / tileSize) +1
 	local tileY = math.floor(y / tileSize) +1
 	
@@ -96,7 +95,7 @@ function Player:isColliding(x, y)
 	return map.layers["Collision"].data[tileY][tileX]
 end
 
-function Player:update(dt)
+function Player:update(dt, map)
 	if self.anim then
 		self.anim:update(dt)
 	end
@@ -111,8 +110,8 @@ function Player:update(dt)
 
 	-- Bottom
 	if self.velocityY > 0 then
-		if self:isColliding(self.x , nextY+self.height) 
-		or self:isColliding(self.x+self.width -1, nextY+self.height) then
+		if self:isColliding(self.x , nextY+self.height, map) 
+		or self:isColliding(self.x+self.width -1, nextY+self.height, map) then
 
 			self.stateY = "standing"
 			self.velocityY = 0
@@ -132,8 +131,8 @@ function Player:update(dt)
 
 	-- Top
 	if self.velocityY < 0 then
-		if self:isColliding(self.x , nextY) 
-		or self:isColliding(self.x+self.width -1, nextY) then
+		if self:isColliding(self.x , nextY, map) 
+		or self:isColliding(self.x+self.width -1, nextY, map) then
 
 			self.velocityY = 0
 			self.y = nextY + tileSize - nextY % tileSize
@@ -144,11 +143,11 @@ function Player:update(dt)
 
 	-- Left
 	if self.velocityX < 0 then
-		if self:isColliding(nextX, self.y) 
-		or self:isColliding(nextX, self.y+self.height -1) then
+		if self:isColliding(nextX, self.y, map) 
+		or self:isColliding(nextX, self.y+self.height -1, map) then
 
 			self.x = nextX + tileSize - nextX % tileSize
-		elseif not self:isColliding(nextX, self.y+self.height) then
+		elseif not self:isColliding(nextX, self.y+self.height, map) then
 			if self.stateY ~= "jumping" and self.stateY ~= "jumpFalling" then
 				self.stateY = "falling"
 				self.anim:pause()
@@ -162,11 +161,11 @@ function Player:update(dt)
 
 	-- Right
 	if self.velocityX > 0 then
-		if self:isColliding(nextX+self.width, self.y) 
-		or self:isColliding(nextX+self.width, self.y+self.height -1) then
+		if self:isColliding(nextX+self.width, self.y, map) 
+		or self:isColliding(nextX+self.width, self.y+self.height -1, map) then
 
 			self.x = nextX - nextX % tileSize
-		elseif not self:isColliding(nextX, self.y+self.height) then
+		elseif not self:isColliding(nextX, self.y+self.height, map) then
 			if self.stateY ~= "jumping" and self.stateY ~= "jumpFalling" then
 				self.stateY = "falling"
 				self.anim:pause()

@@ -11,8 +11,8 @@ Enemy.__index = Enemy
 
 function Enemy:new(x, y)
 	local object = {
-		width         = tileSize,
-		height        = tileSize,
+		width         = deadImg:getWidth(),
+		height        = deadImg:getHeight(),
 		x             = x,
 		y             = y,
 		velocityX     = 0,
@@ -29,8 +29,6 @@ function Enemy:new(x, y)
 	}
 
 	setmetatable(object, self)
-
-	-- object:moveLeft()
 
 	return object
 end
@@ -60,7 +58,7 @@ function Enemy:dead()
 	self.stateY = "dead"
 end
 
-function Enemy:isColliding(x, y)
+function Enemy:isColliding(x, y, map)
 	local tileX = math.floor(x / tileSize) +1
 	local tileY = math.floor(y / tileSize) +1
 	
@@ -91,7 +89,7 @@ function Enemy:isCollidingPlayer(playerX, playerY, playerWidth, playerHeight)
 	       playerY < self.y + self.height
 end
 
-function Enemy:update(dt)
+function Enemy:update(dt, map)
 	-- Gravity application
 	if self.stateY == "falling" then
 		self.velocityY = self.velocityY + world.gravity*dt*self.ySpeed
@@ -102,8 +100,8 @@ function Enemy:update(dt)
 
 	-- Bottom
 	if self.velocityY > 0 then
-		if self:isColliding(self.x , nextY+self.height) 
-		or self:isColliding(self.x+self.width -1, nextY+self.height) then
+		if self:isColliding(self.x , nextY+self.height, map) 
+		or self:isColliding(self.x+self.width -1, nextY+self.height, map) then
 
 			self.stateY = "standing"
 			self.velocityY = 0
@@ -117,12 +115,12 @@ function Enemy:update(dt)
 	if self.velocityX < 0 then
 		self.anim:update(dt)
 
-		if self:isColliding(nextX, self.y) 
-		or self:isColliding(nextX, self.y+self.height -1) then
+		if self:isColliding(nextX, self.y, map) 
+		or self:isColliding(nextX, self.y+self.height -1, map) then
 
 			self.x = nextX + tileSize - nextX % tileSize
 			self:moveRight()
-		elseif not self:isColliding(nextX, self.y+self.height) then
+		elseif not self:isColliding(nextX, self.y+self.height, map) then
 			if self.stateY ~= "jumping" and self.stateY ~= "jumpFalling" then
 				self.stateY = "falling"
 			end
@@ -137,12 +135,12 @@ function Enemy:update(dt)
 	if self.velocityX > 0 then
 		self.anim:update(dt)
 
-		if self:isColliding(nextX+self.width, self.y) 
-		or self:isColliding(nextX+self.width, self.y+self.height -1) then
+		if self:isColliding(nextX+self.width, self.y, map) 
+		or self:isColliding(nextX+self.width, self.y+self.height -1, map) then
 
 			self.x = nextX - nextX % tileSize
 			self:moveLeft()
-		elseif not self:isColliding(nextX, self.y+self.height) then
+		elseif not self:isColliding(nextX, self.y+self.height, map) then
 			if self.stateY ~= "jumping" and self.stateY ~= "jumpFalling" then
 				self.stateY = "falling"
 			end
