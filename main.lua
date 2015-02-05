@@ -1,5 +1,10 @@
 require "camera"
-require "Player"
+require "class/Player"
+require "class/Enemy"
+
+local player
+local enemies = {}
+local music, deadSound
 
 function love.load()
 	local sti = require "lib/sti"
@@ -19,7 +24,7 @@ function love.load()
 	camera:setBounds(0, 0, mapPixelWidth - windowWidth*scale, 0)
 
 	-- World
-	physicsWorld = love.physics.newWorld()
+	local physicsWorld = love.physics.newWorld()
 	world = {
 		gravity = 41.32,
 		ground  = windowHeight - tileSize
@@ -30,44 +35,120 @@ function love.load()
 
 	-- Player
 	player = Player:new()
+
+	-- Enemies
+	for _, enemyObj in pairs(map.layers['Enemies'].objects) do
+		table.insert(enemies, Enemy:new(enemyObj.x, enemyObj.y))
+	end
+
+	-- Sprite layer
+	map:addCustomLayer("Sprite Layer", 4)
+
+	local spriteLayer = map.layers["Sprite Layer"]
+	spriteLayer.sprites = {
+		player = player,
+		enemies = enemies
+	}
+
+	-- Update callback for Custom Layer
+    function spriteLayer:update(dt)
+        for _, enemy in pairs(self.sprites.enemies) do
+    		enemy:update(dt)
+        end
+
+    	self.sprites.player:update(dt)
+    end
+
+    -- Draw callback for Custom Layer
+    function spriteLayer:draw()
+        for _, enemy in pairs(self.sprites.enemies) do
+        	enemy:draw()
+        end
+
+    	self.sprites.player:draw()
+    end
+
+    -- Music
+    deadSound = love.audio.newSource("sound/hit.wav", "static")
+    music = love.audio.newSource("sound/MoonlightSonata.mp3")
+	music:play()
 end
 
 function love.update(dt)
-	-- -- Avoiding too large dt
-	-- if dt > 0.05 then 
-	-- 	dt = 0.05
-	-- end
-
+	-- Update map including player and enemies sprites
 	map:update(dt)
-	player:update(dt)
 
 	camera:setPosition((player.x - windowWidth/2) * scale, 0)
 
-	if love.keyboard.isDown('d', 'right') and player.stateX ~= "movingLeft" then
-		player:moveRight()
+	for i, enemy in pairs(enemies) do
+		if enemy.stateX == "standing" then
+			if enemy.x < (camera._x/scale + windowWidth) then
+				enemy:moveLeft()
+			end
+		else
+			if enemy:isCollidingPlayer(player.x, player.y, player.width, player.height) then
+				if player.stateY == "falling" or player.stateY == "jumpFalling" then
+					enemy:dead()
+
+					local kill = love.audio.newSource("sound/kill.wav", "static")
+					kill:play()
+
+					player.stateY = "standing"
+					player:jump(tileSize*2.5)
+					player.score = player.score + 100
+				elseif player.life > 0 then
+					player:dead()
+
+					deadSound:play()
+
+					for _, enemy in pairs(enemies) do
+						enemy:stop()
+					end
+
+					break
+				end
+			end
+
+			if enemy.y > mapPixelHeight/scale then
+				table.remove(enemies, i)
+			end
+
+			if enemy.life == 0 then
+				if enemy.deathTimer < enemy.deathTimerMax then
+					enemy.deathTimer = enemy.deathTimer + dt
+				else
+					table.remove(enemies, i)
+				end
+			end
+		end
 	end
 
-	if love.keyboard.isDown('q', 'left') and player.stateX ~= "movingRight" then
-		player:moveLeft()
-	end
+	if player.life ~= 0 then
+		if love.keyboard.isDown('d', 'right') then
+			player:moveRight()
+		end
 
-	if love.keyboard.isDown(' ') then
-		player:jump()
-	end	
+		if love.keyboard.isDown('q', 'left') then
+			player:moveLeft()
+		end
+
+		if love.keyboard.isDown(' ') then
+			player:jump()
+		end	
+	end
 end
 
 function love.draw()
 	camera:set()
 
 	-- Background color
-	love.graphics.setBackgroundColor(107, 140, 255)
+	love.graphics.setBackgroundColor(100, 0, 0)
 
 	-- Draw Range culls unnecessary tiles
 	map:setDrawRange(-camera._x/scale, 0, windowWidth, windowHeight)
 
 	-- Draw objects
 	map:draw()
-	player:draw()
 
 	if debug then
 		-- Draw Collision Map
@@ -76,25 +157,28 @@ function love.draw()
 
 		-- Reset color
 		love.graphics.setColor(255, 255, 255, 255)
-		-- Reset translation if the camera is moving 
-		if player.x > windowWidth / 2 then
-			love.graphics.translate((player.x - windowWidth/2),0)
-		end
-
-		-- Display FPS and player information
-		love.graphics.print("fps : " .. love.timer.getFPS(), 2, 0, 0, 1/scale, 1/scale)
-		love.graphics.print("x : " .. string.format("%.1f", player.x), 2, 15/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("y : " .. string.format("%.1f", player.y), 2, 30/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("velocity x : " .. string.format("%.1f", player.velocityX), 2, 45/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("velocity y : " .. string.format("%.1f", player.velocityY), 2, 60/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("tile x : " ..  math.floor(player.x / tileSize) +1, 2, 75/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("tile y : " .. math.floor(player.y / tileSize) +1, 2, 90/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("state x : " .. player.stateX, 2, 105/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("state y : " .. player.stateY, 2, 120/scale, 0, 1/scale, 1/scale)
-		love.graphics.print("life : " .. player.life, 2, 135/scale, 0, 1/scale, 1/scale)
 	end
 
 	camera:unset()
+
+	love.graphics.print("score : " .. player.score, 2, 0)
+
+	if debug then
+		love.graphics.print("fps : " .. love.timer.getFPS(), 2, 15)
+		love.graphics.print("x : " .. string.format("%.1f", player.x), 2, 30)
+		love.graphics.print("y : " .. string.format("%.1f", player.y), 2, 45)
+		love.graphics.print("velocity x : " .. string.format("%.1f", player.velocityX), 2, 60)
+		love.graphics.print("velocity y : " .. string.format("%.1f", player.velocityY), 2, 75)
+		love.graphics.print("tile x : " ..  math.floor(player.x / tileSize) +1, 2, 90)
+		love.graphics.print("tile y : " .. math.floor(player.y / tileSize) +1, 2, 105)
+		love.graphics.print("state x : " .. player.stateX, 2, 120)
+		love.graphics.print("state y : " .. player.stateY, 2, 135)
+		love.graphics.print("life : " .. player.life, 2, 150)
+	end
+
+	if player.life == 0 then
+		love.graphics.print("GAME OVER !", windowWidth/2  * scale - 40, windowHeight/2 * scale - 20)
+	end
 end
 
 function love.resize(w, h)
@@ -111,12 +195,14 @@ function love.keypressed(key)
 end
 
 function love.keyreleased(key)
-	if key == "q" or key == "left" then
-		player.velocityX = 0
-		player.stateX = "standingLeft"
-	elseif key == "d" or key == "right" then
-		player.velocityX = 0
-		player.stateX = "standingRight"
+	if player.life > 0 then
+		if key == "q" or key == "left" then
+			player.velocityX = 0
+			player.stateX = "standingLeft"
+		elseif key == "d" or key == "right" then
+			player.velocityX = 0
+			player.stateX = "standingRight"
+		end
 	end
 end
 
